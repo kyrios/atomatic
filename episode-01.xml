@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+Episode specific XML. All episode specific information belongs here.
+
+
+-->
+<episode version="1">
+  
+  <title>Exiting News for April</title> <!-- Episode Name -->
+  <number>1</number> <!-- The episode number. -->
+
+  <!--
+	Shownotes
+	
+	shown with iPhone and iPod Touch while playing the file (tap on screen).
+	Technically these are lyrics.
+	
+	Linebreaks have to be indicated with \n
+-->
+  <shownotes>
+„\n
+Lorem ipsum dolor sit amet, consectetuer sadipscin
+g elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est 
+Lorem ipsum dolor sit amet. \n
+\n
+\n
+\n
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est \n
+Lorem ipsum dolor sit amet. \n
+\n
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est \n
+Lorem ipsum dolor sit amet.\n
+Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. \n
+\n
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.\n
+Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.“\n
+  </shownotes>
+
+
+  <!-- Chapters 
+		Specify your chapters. The syntax is derived from Apple's Chapter Tool XML Syntax.
+		Original description from Apple below.
+		<picture> paths are relative to the used mediafile
+	-->
+  <chapters>
+	<chapter starttime="00:00">
+		<title>Introduction</title>
+		<picture>./1.jpg</picture>
+		<link href="http://www.apple.com/">My Podcast Homepage</link>
+		<!-- 
+			In this example, you will find the chapter starttime at 00:00.
+			Whenever defining chapters, you must specify your first chapter 
+			at 00:00.
+			
+			This first chapter will appear as "Introduction" within iTunes, and 
+			display the image "PodcastLogo.tif" within the song artwork
+			viewer. This chapter will also display a link called "My Podcast
+			Homepage" with the url "http://www.apple.com/"
+			
+			When working with title, picture, and link tags, please make sure
+			that these tags are presented in that order within your XML.
+		-->
+	</chapter>
+
+	<chapter starttime="00:08">
+		<picture>./2.jpg</picture>
+		<link href="http://www.apple.com/pr/bios/">My Biography Page</link>
+		<!-- 
+			In this second example, the chapter image and web link will change
+			to display "PodcastHost.gif" and "My Biography Page", respectively.
+
+			By not specifying the Title tag, iTunes will change the picture
+			and link, but not provide a chapter to jump to. This chapter will be
+			considered part of Introduction.
+		--> 
+	</chapter>
+
+	<chapter starttime="00:15">
+		<title>This is the End</title>
+		<picture>./3.jpg</picture>
+		<link></link>
+		<!-- 
+			In this third example, the user will now be provided a chapter mark, 
+			called "Let's Get Started", in which they can easily jump to.
+
+			In this chapter, iTunes will now display "PodcastLogo.tif" in
+			the iTunes song artwork pane.
+			
+			Notice how the spaces have been replaced within the picture file
+			name have been replaced with "%20". ChapterTool requires that 
+			file names with spaces be written in this manner.
+	
+			This chapter also includes an empty link tag. This link tag will 
+			instruct ChapterTool to stop displaying the preceeding chapter's 
+			link on any following chapters.
+		--> 
+	</chapter>
+
+	<chapter starttime="0:03:20">
+		<title>No, Really.</title>
+        <!--
+            In this final example, iTunes will create a new chapter, titled
+            "Conclusion", only inheriting the picture from the previous 
+            chapter.
+        -->
+	</chapter>
+
+  </chapters>
+</episode>

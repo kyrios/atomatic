@@ -1,0 +1,246 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# atomatic
+# Copyright (c) 2012 Thorsten Philipp <kyrios@kyri0s.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in the 
+# Software without restriction, including without limitation the rights to use, copy,
+# modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, 
+# and to permit persons to whom the Software is furnished to do so, subject to the
+# following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+
+import sys
+import string
+version = string.split(string.split(sys.version)[0], ".")
+if map(int, version) < [2, 5, 0]:
+  print "Python 2.5 or higher is required"
+  sys.exit(1)
+
+
+import os
+import getopt
+import ConfigParser
+import logging
+import logging.config
+import time
+import re
+
+sys.path.append(os.path.dirname(sys.argv[0]) + "/lib")
+
+import Podcast
+
+version = '''
+$Revision: 5 $
+'''
+p = re.compile(u'.+Revision: (\d)+.+',re.DOTALL)
+m = p.match(version)
+version = m.group(1)
+banner = "========================\n"
+banner += "=   atomatic   =\n" % version
+banner += "========================\n"
+banner += '''
+
+ Copyright (C) 2012 Thorsten Philipp
+ atomatic comes with ABSOLUTELY NO WARRANTY;
+ This is free software, and you are welcome
+ to redistribute it under certain conditions; 
+ See 'LICENSE' file distributed for details.
+ 
+'''
+
+help_message = '''DESCRIPTION:
+Atomatic enriches podcast files with various information such as chapters, 
+images, lycrics,...
+The goal is to automate parts of podcast postproduction.
+
+SYNTAX:
+atomatic [option] audiofile
+
+General:
+-c  --conf                Configfile (paths,global options)
+-d  --destination         Destination folder. Where should files be saved?
+
+    --no-chapters         Don't add chapters to the file
+    --no-chapterimages    Don't add chapter images to the file                 
+    --additional-binaries An additional folder where atomatic should look for
+                          binaries (MP4Box,Atomicparsley,..) (additional to $PATH)
+    
+
+
+Episode Specific:
+-e --episode-xml    Episode specific XML containing chapter definition. 
+                    This is compatible to Chaptertool.
+                    If you ommit this option atomatic will search for the file
+                    <audiofile_wo_suffix>.chapter.xml in the folder where
+                    audiofile is.
+                    
+General Meta:
+ Metainformation that isn't episode specific.
+   --name           Name of the Podcast (Will also be shown as album in iTunes)
+   --url            Podcast URL
+   --producer       Will be shown as artist in iTunes
+   
+'''
+
+
+class Usage(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+
+
+def main(argv=None):
+  print banner
+  if argv is None:
+    argv = sys.argv
+    
+    
+  try:
+    if len(sys.argv) < 2:
+      raise Usage(help_message)
+      
+    argv_podcast = argv.pop()
+    if argv_podcast[1] == "-":
+      print >> sys.stderr, "%s doesn't look like a podcast file" % argv_podcast
+      raise Usage(help_message)
+    
+    try:
+      opts, args = getopt.getopt(argv[1:], "hc:e:d:"
+                                  , [       "help", 
+                                            "conf=",
+                                            "no-chapters",
+                                            "no-chapterimages",
+                                            "episode-xml=",
+                                            "destination=",
+                                            "additional_binaries="
+                                    ])
+    except getopt.error, msg:
+      raise Usage(msg)
+  
+    # ==========
+    # = config =
+    # ==========
+    conffile = ['atomatic.conf', os.path.expanduser('~/.atomatic.conf'),'/etc/atomatic.conf']
+    # Find --conf in the options
+    for option, value in opts:
+      if option in ("-h", "--help"):
+        raise Usage(help_message)
+      if option in ("-c", "--conf"):
+        conffile = value
+    config = ConfigParser.ConfigParser()
+    
+    # Set defaults
+    config.add_section("Episode")
+    config.set("Episode","episode-xml","%s.chapter.xml" % argv_podcast[:-4])
+    
+    config.add_section("General")
+    config.set("General","additional_binaries",os.path.dirname(sys.argv[0]) + "/resources/")
+    config.set("General","add_chapters","1")
+    config.set("General","add_chapterimages","1")
+    config.set("General","destination",os.path.dirname(argv_podcast))
+    
+    config.add_section("Podcast")
+    config.set("Podcast","name","My Podcast")
+    config.set("Podcast","url","http://www.example.com")
+    config.set("Podcast","producer","ACME Podcast productions")
+    config.set("Podcast","logo","./My_podcast_300_300.jpg")
+    
+    
+    config.read(conffile)
+
+    # ===================
+    # = Options Parsing =
+    # ===================
+    for option, value in opts:
+      if option in ("-e", "--episode-xml"):
+        config.set('Episode','episode-xml',value)
+      if option in ("--no-chapters"):
+        config.set("General","add_chapters","0")
+      if option in ("--no-chapterimages"):
+        config.set("General","add_chapterimages","0")
+      if option in("-d", "--destination"):
+        config.set("General","destination",value)
+      if option in("--additional_binaries"):
+        config.set("General","additional_binaries",value)
+  
+  except Usage, err:
+    print >> sys.stderr, str(err.msg)
+    return 2
+
+
+  # ==============================
+  # = Options parsed .. Let's go =
+  # ==============================
+  
+  # Add directories to path
+  sys.path.append(config.get("General","additional_binaries"))
+  
+  podcast = Podcast.Podcast(argv_podcast)
+
+  
+  
+  podcast.name = config.get("Podcast","name")
+  podcast.producer = config.get("Podcast","producer")
+  podcast.url = config.get("Podcast","url")
+  podcast.logo = config.get("Podcast","logo")
+  
+  print "Input: '%s'" % (argv_podcast)
+  print ""
+  
+  (col1,col2) = (20,70)
+  print "%s" % ("Podcast Meta".upper().center(100))
+  print "+%s+%s+" % ("-"*(col1+2),"-"*(col2+2))
+  print "| %s | %s |" % ("Name".ljust(col1),str(podcast.name).ljust(col2))
+  print "| %s | %s |" % ("Producer".ljust(col1),podcast.producer.ljust(col2))
+  print "| %s | %s |" % ("URL".ljust(col1),podcast.url.ljust(col2))
+  print "| %s | %s |" % ("Logo".ljust(col1),podcast.logo.ljust(col2))
+  print "+%s+%s+\n" % ("-"*(col1+2),"-"*(col2+2))
+  
+  # ====================
+  # = Episode specific =
+  # ====================
+  if not os.path.isfile(config.get("Episode","episode-xml")):
+    print >> sys.stderr, "File %s doesn't exist. Specify a episode XML with -e" % config.get("Episode","episode-xml")
+    return 2 
+    
+  podcast.parse_episode_xml(config.get("Episode","episode-xml")) # Episode specifc Meta and Chapters
+  print "%s" % ("Episode Meta".upper().center(100))
+  print "+%s+%s+" % ("-"*(col1+2),"-"*(col2+2))
+  print "| %s | %s |" % ("Title".ljust(col1),podcast.episodename.ljust(col2))
+  print "| %s | %s |" % ("Number".ljust(col1),podcast.episodenum.ljust(col2))
+  print "| %s | %s |" % ("Shownotes".ljust(col1),podcast.shownotes.replace('\n','')[0:60].ljust(col2))
+  print "+%s+%s+\n" % ("-"*(col1+2),"-"*(col2+2))
+  
+  
+  (col1,col2,col3) = (15,32,40) # Output formating
+  print "%s" % ("Chapters".upper().center(100))
+  print "+%s+%s+%s+" % ("-"*(col1+2),"-"*(col2+2),"-"*(col3+2))
+  print "| %s | %s | %s |" % ("Time".ljust(col1),"Title".ljust(col2),"Picture".ljust(col3))
+  print "+%s+%s+%s+" % ("-"*(col1+2),"-"*(col2+2),"-"*(col3+2))
+  for chapter in podcast.get_Chapters():
+    timestamp = time.strftime("%H:%M:%S",time.gmtime(chapter.starttime/1000))
+    print "| %s | %s | %s |" % (str(timestamp+"."+(str(chapter.starttime % 1000))).ljust(col1),str(chapter.title).ljust(col2),str(chapter.picture).ljust(col3))
+  print "+%s+%s+%s+" % ("-"*(col1+2),"-"*(col2+2),"-"*(col3+2))
+  
+  # =======================
+  # = Store files to disk =
+  # =======================
+  podcast.add_Target(filetype="Audio",fileformat="m4a")
+  podcast.write(config.get("General","destination"))
+  
+if __name__ == "__main__":
+  sys.exit(main())
+  

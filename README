@@ -1,0 +1,20 @@
+## Atomatic ##
+
+# http://github.com/kyriii/atomatic
+
+REQUIREMENTS:
+- Python >= 2.5 < 3.0
+- MP4Box
+- libmp4v2 (Handbrake Patches)
+	http://download.m0k.org/handbrake/contrib/libmp4v2-2.0-r290.tar.gz
+	configure
+	make
+	make install
+	
+The following binaries have to be in PATH environment variable
+ - MP4Box (GPAC Project)
+ - mp4chaps (comes with libmp4v2)
+
+
+Use: atomatic --help
+
